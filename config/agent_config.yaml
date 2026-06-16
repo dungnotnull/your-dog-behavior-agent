@@ -1,0 +1,134 @@
+agent:
+  name: dog-behavior-agent
+  version: "1.0.0"
+  description: "Real-time dog vocalization analysis via ML/DL + LLM interpretation"
+  cluster: G
+  data_dir: ./data
+  models_dir: ./models
+
+server:
+  host: "0.0.0.0"
+  port: 8009
+  reload: false
+  log_level: info
+
+audio:
+  sample_rate: 16000
+  default_duration_seconds: 3.0
+  min_duration_seconds: 0.1
+  max_duration_seconds: 60.0
+  supported_formats:
+    - .wav
+    - .mp3
+    - .ogg
+    - .flac
+    - .m4a
+    - .aac
+  quality_gates:
+    min_rms_energy: 0.001
+    min_spectral_centroid_hz: 50
+    max_spectral_centroid_hz: 8000
+
+feature_extraction:
+  mfcc_coefficients: 40
+  hop_length: 512
+  n_fft: 2048
+  n_mels: 128
+  use_wav2vec2: true   # set false for CPU-only fast mode
+  use_chroma: true
+  use_spectral_stats: true
+
+behavior_classification:
+  behavior_classes:
+    - aggression
+    - fear
+    - excitement
+    - pain_distress
+    - attention_seeking
+    - play
+    - alert_warning
+    - greeting
+  min_confidence_threshold: 0.30
+  ensemble:
+    heuristic_weight: 1.0
+    svm_weight: 2.0
+    rf_weight: 1.5
+
+safety_gates:
+  pain_distress_vet_threshold: 0.60     # recommend vet above this confidence
+  aggression_safety_threshold: 0.65    # add safety warning above this confidence
+  urgency_levels:
+    - low
+    - medium
+    - high
+
+visual_analysis:
+  enabled: true                         # set false to disable mediapipe
+  mediapipe_model_complexity: 1
+  min_detection_confidence: 0.4
+  min_tracking_confidence: 0.4
+  max_video_frames_sampled: 30
+
+llm:
+  provider_priority:
+    - claude
+    - openai
+    - ollama
+  claude_model: "claude-opus-4-8"
+  openai_model: "gpt-4o"
+  ollama_model: "llama3"
+  ollama_base_url: "http://localhost:11434"
+  max_tokens: 600
+  retry_attempts: 3
+  retry_base_delay_seconds: 1.0
+  cost_warning_threshold_usd: 0.10     # warn if single session exceeds this
+
+hf_models:
+  wav2vec2:
+    model_id: "facebook/wav2vec2-base"
+    task: "audio_embedding"
+    output_dim: 768
+    idle_unload_seconds: 600
+  bge_large:
+    model_id: "BAAI/bge-large-en-v1.5"
+    task: "text_embedding"
+    output_dim: 1024
+    idle_unload_seconds: 600
+  bart_cnn:
+    model_id: "facebook/bart-large-cnn"
+    task: "summarization"
+    max_input_length: 1024
+    max_output_length: 150
+    idle_unload_seconds: 600
+  bge_reranker:
+    model_id: "BAAI/bge-reranker-large"
+    task: "reranking"
+    idle_unload_seconds: 600
+  whisper:
+    model_id: "openai/whisper-large-v3"
+    task: "speech_detection"
+    idle_unload_seconds: 600
+
+knowledge_updater:
+  schedule: "weekly Sunday 02:00"
+  arxiv_categories:
+    - "cs.SD"
+    - "cs.CV"
+    - "cs.LG"
+  top_n_per_run: 10
+  max_total_papers: 500
+  recency_window_days: 90
+  recency_weight: 0.6
+  relevance_weight: 0.4
+
+memory:
+  db_path: ./data/memory.db
+  wal_mode: true
+  max_sessions_to_keep: 10000
+  behavior_pattern_tracking: true
+
+quality_gates:
+  classification_min_confidence: 0.40
+  llm_response_json_required: true
+  llm_max_retries: 1
+  research_papers_min_count: 5         # min papers for knowledge retrieval to activate

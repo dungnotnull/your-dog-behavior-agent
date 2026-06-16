@@ -1,0 +1,91 @@
+﻿version: "3.9"
+
+services:
+  dog-behavior-agent:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: dog-behavior-agent:latest
+    container_name: dog-behavior-agent
+    ports:
+      - "8009:8009"
+    volumes:
+      - dog_data:/app/data
+      - dog_models:/app/models
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-opus-4-8}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3}
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - PRIVACY_MODE=${PRIVACY_MODE:-false}
+      - HF_TOKEN=${HF_TOKEN:-}
+      - USE_WAV2VEC2=${USE_WAV2VEC2:-true}
+      - DATA_DIR=/app/data
+      - MODELS_DIR=/app/models
+      - HOST=0.0.0.0
+      - PORT=8009
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8009/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    depends_on:
+      - ollama
+
+  dog-behavior-agent-gpu:
+    profiles: ["gpu"]
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: dog-behavior-agent:latest
+    container_name: dog-behavior-agent-gpu
+    ports:
+      - "8009:8009"
+    volumes:
+      - dog_data:/app/data
+      - dog_models:/app/models
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - USE_WAV2VEC2=true
+      - DATA_DIR=/app/data
+      - MODELS_DIR=/app/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    depends_on:
+      - ollama
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: dog-behavior-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - dog_ollama_models:/root/.ollama
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  dog_data:
+    driver: local
+  dog_models:
+    driver: local
+  dog_ollama_models:
+    driver: local

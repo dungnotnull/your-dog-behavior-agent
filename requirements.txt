@@ -1,0 +1,45 @@
+# Core audio processing
+librosa==0.10.2
+sounddevice==0.4.7
+soundfile==0.12.1
+numpy==1.26.4
+
+# Machine learning
+scikit-learn==1.4.2
+scipy==1.13.0
+
+# HuggingFace
+transformers==4.44.0
+sentence-transformers==3.0.1
+torch==2.3.1
+torchaudio==2.3.1
+
+# LLM clients
+anthropic==0.34.2
+openai==1.40.0
+
+# FastAPI / server
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+pydantic==2.7.4
+
+# Scheduler
+APScheduler==3.10.4
+
+# Computer vision (optional, for visual analysis)
+mediapipe==0.10.14
+opencv-python==4.10.0.84
+
+# Utilities
+pyyaml==6.0.2
+click==8.1.7
+python-dotenv==1.0.1
+
+# Testing
+pytest==8.3.2
+pytest-asyncio==0.23.8
+
+# Additional production dependencies
+faiss-cpu>=1.8.0
+openai-whisper>=20231117
+python-multipart>=0.0.9
